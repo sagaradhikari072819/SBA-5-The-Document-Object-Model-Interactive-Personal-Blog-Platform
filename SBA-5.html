@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="SBA-5.css">
+    <script src="SBA-5.js" defer></script>
+    <title>Document</title>
+</head>
+<body>
+    <form id="postForm" novalidate>
+   <label for="title">Post Title</label>
+   <input type="text" id="title" name="title" required maxlength="30" />
+   <span class="error" id="titleError"></span>
+
+   <label for="content">Post content</label>
+   <textarea name="content" id="content" required maxlength="250"></textarea>
+   <span class="error" id="contentError"></span>
+
+   <button type="submit" id="submitButton" >submit</button>
+    </form>
+
+    <textarea name="post" id="post"></textarea>
+    <div id="postsList" ></div>
+  
+</body>
+</html>

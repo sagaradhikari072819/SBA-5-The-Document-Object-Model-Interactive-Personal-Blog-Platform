@@ -1,44 +1,135 @@
 //creating DOM Elements
-const postFormInput = document.getElementById('postForm')
+const postForm = document.getElementById('postForm')
 const titleInput = document.getElementById('title')
 const contentInput = document.getElementById('content')
 const submitButtonInput = document.getElementById('submitButton')
-const popostsListInput = document.getElementById('postsList')
+const postsList = document.getElementById('postsList')
 
 //span error DOM elements
-const titleErrorInput = document.getElementById('titleError')
-const contentErrorInput = document.getElementById('contentError')
-
-// load posts from locastorage
-document.addEventListener("DOMContentLoaded", function(){
-    const Storage = localStorage.getItem('postForm')
-    
-    if (postFormeLocalStorage){
-        postFormInput.value = postFormeLocalStorage;
-    }
-})
+const titleError = document.getElementById('titleError')
+const contentError = document.getElementById('contentError')
 
 
-postFormInput.addEventListener("submit", function (event) {
-  event.preventDefault();
+let posts =[];
+let editingPostId = null;
 
-  // Full form validity check
-  if (postFormInput.checkValidity()) {
-      localStorage.setItem("postForm", postFormInput.value); 
+//Generating Unique ID
+const generateId = () => Date.now().toString()
 
-    // Success message
-    const successMessage = document.createElement("div");
-    successMessage.textContent =
-      "Registered successfully! Welcome, " + usernameInput.value + "!";
-    successMessage.classList.add("success-message");
-    messageContainer.appendChild(successMessage);
-    setTimeout(() => {
-      successMessage.remove();
-    }, 5000);
+const saveToLocalStorage = () => {
+  localStorage.setItem('posts', JSON.stringify(posts))
+}
 
-    registrationForm.reset();
-  } else {
-    registrationForm.reportValidity();
+const loadFromLocalStorage = ()=> {
+  const storedPosts = localStorage.getItem('posts')
+  if (storedPosts){
+    posts = JSON.parse(storedPosts)
   }
+}
+//post rendering
+// Render Posts
+const renderPosts = () => {
+    postsList.innerHTML = ''; // Clear existing posts
+    posts.forEach(post => {
+        const postElement = document.createElement('div');
+        postElement.className = 'post';
+        postElement.innerHTML = `
+            <h3>${post.title}</h3>
+            <p>${post.content}</p>
+            <small>Posted on: ${new Date(post.timestamp).toLocaleString()}</small>
+            <div>
+                <button class="edit-btn" data-id="${post.id}">Edit</button>
+                <button class="delete-btn" data-id="${post.id}">Delete</button>
+            </div>
+        `;
+        postsList.appendChild(postElement);
+    });
+};
+
+// Handle Form Submission
+postForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const title = titleInput.value.trim();
+    const content = contentInput.value.trim();
+    
+    // Clear previous errors
+    titleError.textContent = '';
+    contentError.textContent = '';
+    
+    let isValid = true;
+    
+    // Validation
+    if (!title) {
+        titleError.textContent = 'Title is required!';
+        isValid = false;
+    }
+    if (!content) {
+        contentError.textContent = 'Content is required!';
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        return;
+    }
+    
+    if (editingPostId) {
+        // Update existing post
+        posts = posts.map(post => 
+            post.id === editingPostId 
+                ? { ...post, title, content, timestamp: Date.now() }
+                : post
+        );
+        editingPostId = null;
+        submitButton.textContent = 'Submit';
+    } else {
+        // Create new post
+        const newPost = {
+            id: generateId(),
+            title,
+            content,
+            timestamp: Date.now()
+        };
+        posts.push(newPost);
+    }
+    
+    // Save and render
+    saveToLocalStorage();
+    renderPosts();
+    
+    // Clear form
+    titleInput.value = '';
+    contentInput.value = '';
 });
+
+// Handle Delete and Edit (Event Delegation)
+postsList.addEventListener('click', (e) => {
+    const id = e.target.dataset.id;
+    
+    if (e.target.classList.contains('delete-btn')) {
+        // Delete post
+        posts = posts.filter(post => post.id !== id);
+        saveToLocalStorage();
+        renderPosts();
+    }
+    
+    if (e.target.classList.contains('edit-btn')) {
+        // Populate form for editing
+        const postToEdit = posts.find(post => post.id === id);
+        if (postToEdit) {
+            titleInput.value = postToEdit.title;
+            contentInput.value = postToEdit.content;
+            editingPostId = id;
+            submitButton.textContent = 'Update';
+        }
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadFromLocalStorage();
+    renderPosts();
+});
+
+
 
